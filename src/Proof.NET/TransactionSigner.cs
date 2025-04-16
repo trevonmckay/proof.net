@@ -23,5 +23,9 @@
         public bool? PersonallyKnownToNotary { get; set; }
 
         public string? SigningStatus { get; set; }
+
+        public bool? LinkExpired { get; set; }
+
+        public string? TransactionAccessLink { get; set; }
     }
 }
