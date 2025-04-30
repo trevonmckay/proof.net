@@ -25,10 +25,10 @@ namespace Proof.NET
         private readonly string _apiKey;
         private readonly RestClient _client;
 
-        public ProofClient(string apiKey, string endpoint = "https://api.fairfax.proof.com/v1/")
+        public ProofClient(string apiKey, string? endpoint = null)
         {
             _apiKey = apiKey;
-            RestClientOptions restClientOptions = new(endpoint);
+            RestClientOptions restClientOptions = new(endpoint ?? "https://api.proof.com/v1/");
             _client = new(
                 restClientOptions,
                 configureSerialization: ConfigureRestClientSerialization);
