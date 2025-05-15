@@ -1,18 +1,13 @@
-﻿using System.Text.Json;
-
-namespace Proof.NET
+﻿namespace Proof.NET
 {
-    public class WebhookEvent<TEventData>
+    public class WebhookEvent<TEventData> : WebhookEvent
     {
-        public string? Event { get; set; }
-
-        public TEventData? Data { get; set; }
-
-        protected JsonElement Json { get; set; }
-
-        public string GetRawJson()
+        public WebhookEvent(string eventType, TEventData eventData)
+            : base(eventType)
         {
-            return Json.GetRawText();
+            Data = eventData;
         }
+
+        public TEventData Data { get; }
     }
 }
