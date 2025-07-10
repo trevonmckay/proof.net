@@ -62,6 +62,14 @@ namespace Proof.NET
             return await ExecuteAsync<Transaction>(restRequest, documentUrlVersion, cancellationToken);
         }
 
+        public async Task<ApiResponse> DeleteTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
+        {
+            RestRequest restRequest = new($"transactions/{transactionId}", Method.Delete);
+            restRequest.AddHeader("Accept", "application/json");
+
+            return await ExecuteAsync<Transaction>(restRequest, null, cancellationToken);
+        }
+
         public async Task<ApiResponse<Document>> AddDocumentAsync(string transactionId, AddDocumentRequest addDocumentRequest, DocumentUrlVersion documentUrlVersion = DocumentUrlVersion.v1, CancellationToken cancellationToken = default)
         {
             RestRequest restRequest = new($"transactions/{transactionId}/documents", Method.Post);
@@ -156,13 +164,15 @@ namespace Proof.NET
             }
         }
 
-        private void PrepareRequest(RestRequest restRequest, DocumentUrlVersion documentUrlVersion)
+        private void PrepareRequest(RestRequest restRequest, DocumentUrlVersion? documentUrlVersion)
         {
-            restRequest.AddOrUpdateHeader("ApiKey", _apiKey);
-            restRequest.AddQueryParameter("document_url_version", documentUrlVersion == DocumentUrlVersion.v2 ? "v2" : "v1", false);
+            if (documentUrlVersion is not null)
+            {
+                restRequest.AddQueryParameter("document_url_version", documentUrlVersion == DocumentUrlVersion.v2 ? "v2" : "v1", false);
+            }
         }
 
-        private async Task<ApiResponse<TResponse>> ExecuteAsync<TResponse>(RestRequest restRequest, DocumentUrlVersion documentUrlVersion, CancellationToken cancellationToken = default)
+        private async Task<ApiResponse<TResponse>> ExecuteAsync<TResponse>(RestRequest restRequest, DocumentUrlVersion? documentUrlVersion, CancellationToken cancellationToken = default)
         {
             PrepareRequest(restRequest, documentUrlVersion);
             RestResponse<TResponse> response = await _client.ExecuteAsync<TResponse>(restRequest, cancellationToken);
