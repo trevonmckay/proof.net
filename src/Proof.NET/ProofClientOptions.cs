@@ -1,10 +1,10 @@
 ﻿namespace Proof.NET
 {
-    public class ProofClientOptions
+    public record ProofClientOptions
     {
-        public string? ApiKey { get; set; }
+        public string? ApiKey { get; init; }
 
-        public string? Endpoint { get; set; }
+        public string? Endpoint { get; init; }
 
         public DocumentUrlVersion DefaultDocumentUrlVersion { get; init; } = DocumentUrlVersion.v2;
 
