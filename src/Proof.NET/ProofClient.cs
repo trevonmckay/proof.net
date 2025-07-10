@@ -1,32 +1,49 @@
-﻿using RestSharp;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using RestSharp;
 using RestSharp.Serializers;
 using RestSharp.Serializers.Json;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json.Serialization;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Linq;
 
 namespace Proof.NET
 {
     public class ProofClient
     {
+        private const string ApiKeyHeaderName = "ApiKey";
+
         private static readonly JsonSerializerOptions _jsonSerializerOptions = CreateJsonSerializerOptions();
 
-        private readonly string _apiKey;
         private readonly RestClient _client;
 
-        public ProofClient(string apiKey, string? endpoint = null)
+        public ProofClient(HttpClient httpClient, ProofClientOptions options)
         {
-            _apiKey = apiKey;
-            RestClientOptions restClientOptions = new(endpoint ?? "https://api.proof.com/v1/");
-            _client = new(
-                restClientOptions,
-                configureSerialization: ConfigureRestClientSerialization);
+            if (string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                throw new ArgumentException("The Proof API key is null or empty.");
+            }
+
+            httpClient.BaseAddress = ProofEndpointResolver.ResolveBaseAddress(options.Environment, options.Endpoint);
+            httpClient.DefaultRequestHeaders.Add(ApiKeyHeaderName, options.ApiKey);
+
+            _client = new(httpClient, configureSerialization: ConfigureRestClientSerialization);
         }
+
+        [ActivatorUtilitiesConstructor]
+        public ProofClient(HttpClient httpClient, IOptions<ProofClientOptions> optionsAccessor)
+            : this(httpClient, optionsAccessor.Value) { }
+
+        public ProofClient(ProofClientOptions options, HttpMessageHandler? httpPipeline = null)
+            : this(BuildHttpClient(options, httpPipeline), options) { }
+
+        public ProofClient(string apiKey, string? endpoint = null)
+            : this(new ProofClientOptions { ApiKey = apiKey, Endpoint = endpoint }) { }
 
         public async Task<ApiResponse<Transaction>> CreateTransactionAsync(CreateTransactionRequest createTransactionRequest, DocumentUrlVersion documentUrlVersion = DocumentUrlVersion.v1, CancellationToken cancellationToken = default)
         {
@@ -60,6 +77,38 @@ namespace Proof.NET
             restRequest.AddHeader("Accept", "application/json");
 
             return await ExecuteAsync<Transaction>(restRequest, documentUrlVersion, cancellationToken);
+        }
+
+        private static HttpClient BuildHttpClient(ProofClientOptions options, HttpMessageHandler? httpPipeline)
+        {
+            if (string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                throw new ArgumentException("The Proof API key is null or empty.");
+            }
+
+            var httpClient = httpPipeline is null
+                ? new HttpClient()
+                : new HttpClient(httpPipeline, disposeHandler: false);
+            httpClient.BaseAddress = ProofEndpointResolver.ResolveBaseAddress(options.Environment, options.Endpoint);
+            httpClient.DefaultRequestHeaders.Add(ApiKeyHeaderName, options.ApiKey);
+
+            return httpClient;
+        }
+
+        private static JsonSerializerOptions CreateJsonSerializerOptions()
+        {
+            JsonSerializerOptions jsonSerializerOptions = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            };
+
+            return jsonSerializerOptions;
+        }
+
+        private static void ConfigureRestClientSerialization(SerializerConfig config)
+        {
+            config.UseSystemTextJson(_jsonSerializerOptions);
         }
 
         private void HandleResponse(RestResponse restResponse)
@@ -120,22 +169,6 @@ namespace Proof.NET
             HandleResponse(response);
 
             return ApiResponse<TResponse>.Create(response);
-        }
-
-        private static JsonSerializerOptions CreateJsonSerializerOptions()
-        {
-            JsonSerializerOptions jsonSerializerOptions = new()
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            };
-
-            return jsonSerializerOptions;
-        }
-
-        private static void ConfigureRestClientSerialization(SerializerConfig config)
-        {
-            config.UseSystemTextJson(_jsonSerializerOptions);
         }
     }
 }
