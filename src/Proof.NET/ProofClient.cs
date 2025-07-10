@@ -12,12 +12,6 @@ using System.Linq;
 
 namespace Proof.NET
 {
-    public enum DocumentUrlVersion
-    {
-        v1,
-        v2
-    }
-
     public class ProofClient
     {
         private static readonly JsonSerializerOptions _jsonSerializerOptions = CreateJsonSerializerOptions();

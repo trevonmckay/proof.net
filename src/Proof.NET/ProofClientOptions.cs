@@ -6,4 +6,10 @@
 
         public string? Endpoint { get; set; }
     }
+
+    public enum DocumentUrlVersion
+    {
+        v1,
+        v2
+    }
 }
