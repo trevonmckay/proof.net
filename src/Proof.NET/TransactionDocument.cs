@@ -42,6 +42,9 @@ namespace Proof.NET
         [JsonPropertyName("requirement")]
         public string? Requirement { get; set; }
 
+        [JsonPropertyName("signed_url")]
+        public Uri? SignedUrl { get; set; }
+
         [JsonPropertyName("signing_designation_groups")]
         public IEnumerable<object>? SigningDesignationGroups { get; set; }
 
