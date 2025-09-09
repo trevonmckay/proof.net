@@ -62,6 +62,8 @@ namespace Proof.NET
                     break;
                 case "transaction.completed" when TryCreate<TransactionCompletedEventData>(eventType, rootElement, out webhookEvent):
                     break;
+                case "transaction.released" when TryCreate<TransactionReleasedEventData>(eventType, rootElement, out webhookEvent):
+                    break;
                 case "transaction.deleted" when TryCreate<TransactionDeletedEventData>(eventType, rootElement, out webhookEvent):
                     break;
                 case "transaction.completed_with_rejections" when TryCreate<TransactionCompletedWithRejectionsEventData>(eventType, rootElement, out webhookEvent):
